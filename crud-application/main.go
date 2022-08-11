@@ -10,6 +10,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type Director struct {
+	fname string `json:"fname"`
+	lname string `json:"lname"`
+}
+
 type Movie struct {
 	ID       int64     `json:"id"`
 	Isbn     string    `json:"isbn"`
@@ -17,12 +22,8 @@ type Movie struct {
 	Director *Director `json:director`
 }
 
-type Director struct {
-	fname string `json:"fname"`
-	lname string `json:"lname"`
-}
-
 var movies []Movie
+var sequence int64 = 1
 
 func getMovies(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -52,13 +53,29 @@ func getMovie(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func createMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	//Params := mux.Vars(r)
+	sequence++
+	//tmp := Movie{ID: sequence, Isbn: Params["isbn"], Title: Params["title"], Director: &Director{fname: Params["fname"], lname: Params["lname"]}}
+	var movie Movie
+	_ = json.NewDecoder(r.Body).Decode(&movie)
+	movie.ID = sequence
+	movies = append(movies, movie)
+	response := map[string]interface{}{"message": "new movie was add"}
+	response["movie"] = movie
+	fmt.Println(movies)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
+}
+
 func main() {
-	movies = append(movies, Movie{ID: 1, Isbn: "jgj45", Title: "test", Director: &Director{"fname", "lname"}})
+	//movies = append(movies, Movie{ID: 1, Isbn: "jgj45", Title: "test", Director: &Director{"fname", "lname"}})
 	r := mux.NewRouter()
 
 	r.HandleFunc("/movies", getMovies).Methods("GET")
 	r.HandleFunc("/movies/{id}", getMovie).Methods("GET")
-	// r.HandleFunc("/movies", createMovie).Methods("POST")
+	r.HandleFunc("/movies", createMovie).Methods("POST")
 	// r.HandleFunc("/movies/{id}", updateMovie).Methods("PUT")
 	// r.HandleFunc("/movies/{id}", deleteMovie).Methods("DELETE")
 
