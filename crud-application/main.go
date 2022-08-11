@@ -73,7 +73,7 @@ func updateMovie(w http.ResponseWriter, r *http.Request) {
 	Params := mux.Vars(r)
 	id, _ := strconv.ParseInt(Params["id"], 0, 8)
 	for index, item := range movies {
-		if int64(id) == item.ID {
+		if id == item.ID {
 			movies = append(movies[:index], movies[index+1:]...)
 			var movie Movie
 			_ = json.NewDecoder(r.Body).Decode(&movie)
@@ -92,6 +92,25 @@ func updateMovie(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func deleteMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	Params := mux.Vars(r)
+	id, _ := strconv.ParseInt(Params["id"], 0, 8)
+	for index, item := range movies {
+		if id == item.ID {
+			movies = append(movies[:index], movies[index+1:]...)
+			w.WriteHeader(http.StatusOK)
+			var message string = "movie with id " + Params["id"] + "was deleted"
+			response := map[string]string{"message": message}
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	}
+	var message string = "movie with id " + Params["id"] + " doesn't exist"
+	response := map[string]string{"message": message}
+	json.NewEncoder(w).Encode(response)
+}
+
 func main() {
 	//movies = append(movies, Movie{ID: 1, Isbn: "jgj45", Title: "test", Director: &Director{"fname", "lname"}})
 	r := mux.NewRouter()
@@ -100,7 +119,7 @@ func main() {
 	r.HandleFunc("/movies/{id}", getMovie).Methods("GET")
 	r.HandleFunc("/movies", createMovie).Methods("POST")
 	r.HandleFunc("/movies/{id}", updateMovie).Methods("PUT")
-	// r.HandleFunc("/movies/{id}", deleteMovie).Methods("DELETE")
+	r.HandleFunc("/movies/{id}", deleteMovie).Methods("DELETE")
 
 	fmt.Println("server listening at port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
