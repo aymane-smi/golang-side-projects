@@ -11,19 +11,19 @@ import (
 )
 
 type Director struct {
-	fname string `json:"fname"`
-	lname string `json:"lname"`
+	Fname string `json:"fname"`
+	Lname string `json:"lname"`
 }
 
 type Movie struct {
 	ID       int64     `json:"id"`
 	Isbn     string    `json:"isbn"`
 	Title    string    `json:"title"`
-	Director *Director `json:director`
+	Director *Director `json:"director"`
 }
 
 var movies []Movie
-var sequence int64 = 1
+var sequence int64 = 0
 
 func getMovies(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -64,9 +64,32 @@ func createMovie(w http.ResponseWriter, r *http.Request) {
 	movies = append(movies, movie)
 	response := map[string]interface{}{"message": "new movie was add"}
 	response["movie"] = movie
-	fmt.Println(movies)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
+}
+
+func updateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	Params := mux.Vars(r)
+	id, _ := strconv.ParseInt(Params["id"], 0, 8)
+	for index, item := range movies {
+		if int64(id) == item.ID {
+			movies = append(movies[:index], movies[index+1:]...)
+			var movie Movie
+			_ = json.NewDecoder(r.Body).Decode(&movie)
+			movie.ID = item.ID
+			movies = append(movies, movie)
+			w.WriteHeader(http.StatusOK)
+			var message string = "movie with id " + Params["id"] + " was updated"
+			response := map[string]string{"message": message}
+			json.NewEncoder(w).Encode(response)
+			return
+		}
+	}
+	var message string = "movie with id " + Params["id"] + " doesn't exist"
+	response := map[string]string{"message": message}
+	json.NewEncoder(w).Encode(response)
+
 }
 
 func main() {
@@ -76,7 +99,7 @@ func main() {
 	r.HandleFunc("/movies", getMovies).Methods("GET")
 	r.HandleFunc("/movies/{id}", getMovie).Methods("GET")
 	r.HandleFunc("/movies", createMovie).Methods("POST")
-	// r.HandleFunc("/movies/{id}", updateMovie).Methods("PUT")
+	r.HandleFunc("/movies/{id}", updateMovie).Methods("PUT")
 	// r.HandleFunc("/movies/{id}", deleteMovie).Methods("DELETE")
 
 	fmt.Println("server listening at port 8080")
