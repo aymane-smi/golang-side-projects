@@ -1,4 +1,4 @@
-package book
+package models
 
 import (
 	"aymane/pkg/config"
@@ -21,7 +21,7 @@ func init() {
 	db.AutoMigrate(&Book{})
 }
 
-func (b *Book) createBook() *Book {
+func (b *Book) CreateBook() *Book {
 	db.Create(&b)
 	return b
 }
@@ -40,6 +40,6 @@ func GetBookById(id int64) (*Book, *gorm.DB) {
 
 func DeleteBookById(id int64) Book {
 	var book Book
-	db.Where("id = ?", id).Delete(&book)
+	db.Delete(&book, id)
 	return book
 }
