@@ -14,4 +14,6 @@ func UseAuth(app *fiber.App) {
 
 	api.Post("/signup", controllers.SignUp)
 
+	api.Post("/signin", controllers.SignIn)
+
 }
