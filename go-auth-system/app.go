@@ -15,6 +15,7 @@ func main() {
 	app := fiber.New()
 
 	routes.UseAuth(app)
+	routes.UseHome(app)
 
 	log.Fatal(app.Listen(":3000"))
 }
